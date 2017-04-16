@@ -1,0 +1,14 @@
+TODO LIST
+=========
+- Handle banned users
+  - Maybe banned table in DB
+  - put "banned" in roles string for a banned user and check at every route
+  - Definitely make sure to revoke all refresh tokens in the DB with the foreign
+    key user_id that maps to a the banned user in users. 
+  - Maybe new attribute is_banned for users in the model.
+
+- Define constants for how long we want access/refresh tokens to last
+
+X If user is created and inserted into DB but we encounter error after that
+  we need to delete the user because the registration process as a WHOLE failed
+  (do the same for errors that happen after creating the refresh_token and inserting)

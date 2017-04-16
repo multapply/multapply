@@ -1,0 +1,6 @@
+- Make sure that we test each aspect of user creation/registration
+  - All fields are non-empty
+  - Username is unique
+  - email is not used (unique)
+  - password and confirmation match
+    - then we hash the password

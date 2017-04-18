@@ -70,9 +70,9 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 		}
 
 		// otherwise, valid and we set the context
-		ctx := context.WithValue(r.Context(), "uid", claims["uid"])
-		ctx := context.WithValue(ctx, "roles", claims["roles"])
-		next(w, r, ps)
+		ctx := context.WithValue(r.Context(), contextKeyUserID, claims["uid"])
+		ctx = context.WithValue(ctx, contextKeyRoles, claims["roles"])
+		next(w, r.WithContext(ctx), ps)
 	})
 }
 

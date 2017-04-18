@@ -42,12 +42,6 @@ func GetAccessToken(u *User) (string, error) {
 	// TODO: Define constant in pkg/constants to define this expiry time
 	now := time.Now()
 	// Set claims for the token
-	// claims := make(jwt.MapClaims)
-	// claims["iss"] = "multapply.io"
-	// claims["exp"] = tokenExpire
-	// claims["iat"] = time.Now().Unix()
-	// claims["roles"] = u.Roles
-	// claims["uid"] = u.UserID
 	claims := new(AccessTokenClaims)
 	claims.Issuer = "multapply.io"
 	claims.ExpiresAt = now.Add(time.Minute * 30).Unix()

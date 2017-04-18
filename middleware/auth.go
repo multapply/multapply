@@ -1,12 +1,25 @@
 package middleware
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/julienschmidt/httprouter"
+)
+
+// Context keys
+type contextKey string
+
+func (c contextKey) String() string {
+	return "pkg/middleware context key " + string(c)
+}
+
+const (
+	contextKeyUserID = contextKey("uid")
+	contextKeyRoles  = contextKey("roles")
 )
 
 // Authenticate - Middleware for requiring jwt token auth for a route
@@ -51,14 +64,14 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 		}
 
 		// Extract and verify claims
-		err = parsedToken.Claims.Valid()
-		if err != nil {
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		if !ok {
 			http.Error(w, "Token is invalid", 401)
-			return
 		}
 
 		// otherwise, valid and we set the context
-		// ctx := context.WithValue(r.Context())
+		ctx := context.WithValue(r.Context(), "uid", claims["uid"])
+		ctx := context.WithValue(ctx, "roles", claims["roles"])
 		next(w, r, ps)
 	})
 }

@@ -29,10 +29,6 @@ func main() {
 	r := httprouter.New()
 
 	// Routes TODO: Logging middleware?
-	// r.GET("/", chain(
-	// 	mw.Authenticate,
-	// 	mw.Authorize(userRoles.Admin),
-	// 	env.GetUser))
 	r.GET("/", chain(env.GetUser,
 		mw.Authenticate,
 		mw.Authorize(userRoles.Admin)))
@@ -44,26 +40,6 @@ func main() {
 
 // chain - chains middleware functions together
 // compatible with both net/http's http.Handler and httprouter's httprouter.Handle
-// func chain(middlewares ...interface{}) httprouter.Handle {
-// 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-// 		for _, f := range middlewares {
-// 			switch f := f.(type) {
-// 			case func(http.ResponseWriter, *http.Request, httprouter.Params):
-// 				f(w, r, ps)
-// 			case httprouter.Handle:
-// 				f(w, r, ps)
-// 			case http.Handler:
-// 				f.ServeHTTP(w, r)
-// 			case func(http.ResponseWriter, *http.Request):
-// 				f(w, r)
-// 			default:
-// 				http.Error(w, "Error", 500)
-// 				return
-// 			}
-// 		}
-// 	}
-// }
-
 func chain(endpoint func(http.ResponseWriter, *http.Request, httprouter.Params),
 	middleware ...func(httprouter.Handle) httprouter.Handle) httprouter.Handle {
 

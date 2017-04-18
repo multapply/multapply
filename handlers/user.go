@@ -14,12 +14,9 @@ import (
 )
 
 // GetUser - Returns user with given :id
+// TODO: Actually implement this - currently just a placeholder to test auth flow
 func (env *Env) GetUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	users, err := models.GetAllUsers(env.DB)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Print(users[0].FirstName)
+	w.Write([]byte("Auth successful!"))
 }
 
 // CreateUser - Attempts to create a new User with the given
@@ -97,10 +94,11 @@ func (env *Env) CreateUser(w http.ResponseWriter, r *http.Request, ps httprouter
 
 	// Create User from NewUser n then insert into DB
 	u := models.CreateUser(n)
-	err = models.InsertUser(env.DB, u)
+	uid, err := models.InsertUser(env.DB, u)
 	if err != nil {
 		http.Error(w, "Failed to create account", 500)
 	}
+	u.UserID = uid
 
 	// Create access token
 	var accessToken string

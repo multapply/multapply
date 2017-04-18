@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/multapply/multapply/util/userRoles"
 )
 
 // User - A user account in the app
 type User struct {
-	UserID       int    `json:"user_id"`
+	UserID       int    `json:"user_id" db:"user_id"`
 	Username     string `json:"username" db:"username"`
 	FirstName    string `json:"first_name" db:"first_name"`
 	LastName     string `json:"last_name" db:"last_name"`
@@ -48,18 +49,20 @@ func CreateUser(n *NewUser) *User {
 		LastName:     n.LastName,
 		Email:        n.Email,
 		PasswordHash: n.PasswordHash,
-		Roles:        "USER",
+		Roles:        userRoles.BasicUser,
 	}
 
 	return u
 }
 
 // InsertUser - Insert User into DB
-func InsertUser(db *sqlx.DB, u *User) error {
-	_, err := db.NamedExec(`INSERT INTO users 
+func InsertUser(db *sqlx.DB, u *User) (int, error) {
+	var uid int
+	err := db.QueryRow(`INSERT INTO users 
 		(username, first_name, last_name, email, password_hash, roles)
-		VALUES (:username, :first_name, :last_name, :email, :password_hash, :roles)`, u)
-	return err
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING user_id`, u.Username, u.FirstName, u.LastName, u.Email, u.PasswordHash, u.Roles).Scan(&uid)
+	return uid, err
 }
 
 // RemoveNewUser - Remove a user we just inserted into the DB

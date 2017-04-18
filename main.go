@@ -6,6 +6,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/multapply/multapply/handlers"
+	"github.com/multapply/multapply/middleware"
 )
 
 func init() {
@@ -27,9 +28,28 @@ func main() {
 	r := httprouter.New()
 
 	// Routes TODO: Logging middleware?
-	r.GET("/user/:id", env.GetUser)
+	r.GET("/", middleware.Authenticate(env.GetUser))
 	r.POST("/user/register", env.CreateUser)
 
 	log.Print("Running server on " + PORT)
 	log.Fatal(http.ListenAndServe(PORT, r))
+}
+
+// chain - chains middleware functions together
+// compatible with both net/http's http.Handler and httprouter's httprouter.Handle
+func chain(middlewares ...interface{}) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		for _, f := range middlewares {
+			switch f := f.(type) {
+			case httprouter.Handle:
+				f(w, r, ps)
+			case http.Handler:
+				f.ServeHTTP(w, r)
+			case func(http.ResponseWriter, *http.Request):
+				f(w, r)
+			default:
+				http.Error(w, "Error", 500)
+			}
+		}
+	}
 }

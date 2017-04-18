@@ -6,7 +6,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/multapply/multapply/handlers"
-	"github.com/multapply/multapply/middleware"
+	mw "github.com/multapply/multapply/middleware"
+	"github.com/multapply/multapply/util/userRoles"
 )
 
 func init() {
@@ -28,7 +29,13 @@ func main() {
 	r := httprouter.New()
 
 	// Routes TODO: Logging middleware?
-	r.GET("/", middleware.Authenticate(env.GetUser))
+	// r.GET("/", chain(
+	// 	mw.Authenticate,
+	// 	mw.Authorize(userRoles.Admin),
+	// 	env.GetUser))
+	r.GET("/", chain(env.GetUser,
+		mw.Authenticate,
+		mw.Authorize(userRoles.Admin)))
 	r.POST("/user/register", env.CreateUser)
 
 	log.Print("Running server on " + PORT)
@@ -37,19 +44,32 @@ func main() {
 
 // chain - chains middleware functions together
 // compatible with both net/http's http.Handler and httprouter's httprouter.Handle
-func chain(middlewares ...interface{}) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		for _, f := range middlewares {
-			switch f := f.(type) {
-			case httprouter.Handle:
-				f(w, r, ps)
-			case http.Handler:
-				f.ServeHTTP(w, r)
-			case func(http.ResponseWriter, *http.Request):
-				f(w, r)
-			default:
-				http.Error(w, "Error", 500)
-			}
-		}
+// func chain(middlewares ...interface{}) httprouter.Handle {
+// 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// 		for _, f := range middlewares {
+// 			switch f := f.(type) {
+// 			case func(http.ResponseWriter, *http.Request, httprouter.Params):
+// 				f(w, r, ps)
+// 			case httprouter.Handle:
+// 				f(w, r, ps)
+// 			case http.Handler:
+// 				f.ServeHTTP(w, r)
+// 			case func(http.ResponseWriter, *http.Request):
+// 				f(w, r)
+// 			default:
+// 				http.Error(w, "Error", 500)
+// 				return
+// 			}
+// 		}
+// 	}
+// }
+
+func chain(endpoint func(http.ResponseWriter, *http.Request, httprouter.Params),
+	middleware ...func(httprouter.Handle) httprouter.Handle) httprouter.Handle {
+
+	for i := len(middleware) - 1; i >= 0; i-- {
+		mw := middleware[i]
+		endpoint = mw(endpoint)
 	}
+	return httprouter.Handle(endpoint)
 }

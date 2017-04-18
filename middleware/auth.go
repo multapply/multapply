@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -29,6 +30,7 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 
 		// Retrieve token from request header
 		// Format: 'Authorization: Bearer <tokenstring>'
+		// TODO: Just get token from cookie since they are sent automatically
 		tokens, ok := r.Header["Authorization"]
 		if ok && len(tokens) >= 1 {
 			tokenString = strings.TrimPrefix(tokens[0], "Bearer ")
@@ -80,7 +82,9 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 func Authorize(roles ...string) func(next httprouter.Handle) httprouter.Handle {
 	return func(next httprouter.Handle) httprouter.Handle {
 		return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-
+			// TODO: Actually check permissions vs user roles from context
+			log.Println(r.Context().Value(contextKeyUserID))
+			next(w, r, ps)
 		})
 	}
 }

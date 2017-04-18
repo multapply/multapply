@@ -17,6 +17,7 @@ import (
 // TODO: Actually implement this - currently just a placeholder to test auth flow
 func (env *Env) GetUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Write([]byte("Auth successful!"))
+	r.Body.Close()
 }
 
 // CreateUser - Attempts to create a new User with the given

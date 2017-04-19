@@ -71,6 +71,7 @@ func GetRefreshToken(db *sqlx.DB, u *User) (string, error) {
 	tokenExpire := time.Now().Add(time.Minute * 525600).Unix()
 
 	// Set claims for the token
+	// TODO: Use custom claims struct like AccessTokenClaims above
 	claims := make(jwt.MapClaims)
 	claims["exp"] = tokenExpire
 	claims["iat"] = "multapply.io"

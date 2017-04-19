@@ -17,6 +17,7 @@ var n = &NewUser{
 	PasswordHash:    "asdf",
 }
 
+// Test Trim()
 func TestTrim(t *testing.T) {
 	n.Trim()
 
@@ -29,6 +30,7 @@ func TestTrim(t *testing.T) {
 	assert.Equal(t, "asdf", n.PasswordHash, "Password hash should be unchanged")
 }
 
+// Test CreateUser(n *NewUser)
 func TestCreateUser(t *testing.T) {
 	u := CreateUser(n)
 
@@ -40,3 +42,5 @@ func TestCreateUser(t *testing.T) {
 	assert.Equal(t, n.PasswordHash, u.PasswordHash, "Password hash should be same as NewUser's")
 	assert.Equal(t, userRoles.BasicUser, u.Roles, "Roles should be equal to \"USER\"")
 }
+
+// TODO: Test DB querying functions

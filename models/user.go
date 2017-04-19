@@ -31,7 +31,6 @@ type NewUser struct {
 }
 
 // Trim - trims all string attributes of this NewUser object
-// TODO: Test this function
 func (n *NewUser) Trim() {
 	n.Username = strings.TrimSpace(n.Username)
 	n.FirstName = strings.TrimSpace(n.FirstName)

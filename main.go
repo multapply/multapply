@@ -31,7 +31,7 @@ func main() {
 	// Routes TODO: Logging middleware?
 	r.GET("/", chain(env.GetUser,
 		mw.Authenticate,
-		mw.Authorize(userRoles.Admin)))
+		mw.Authorize(userRoles.BasicUser)))
 	r.POST("/user/register", env.CreateUser)
 
 	log.Print("Running server on " + PORT)

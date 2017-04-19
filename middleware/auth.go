@@ -3,12 +3,12 @@ package middleware
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/julienschmidt/httprouter"
+	"github.com/multapply/multapply/util/userRoles"
 )
 
 // Context keys
@@ -69,6 +69,7 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 		claims, ok := parsedToken.Claims.(jwt.MapClaims)
 		if !ok {
 			http.Error(w, "Token is invalid", 401)
+			return
 		}
 
 		// otherwise, valid and we set the context
@@ -82,9 +83,51 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 func Authorize(roles ...string) func(next httprouter.Handle) httprouter.Handle {
 	return func(next httprouter.Handle) httprouter.Handle {
 		return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-			// TODO: Actually check permissions vs user roles from context
-			log.Println(r.Context().Value(contextKeyUserID))
+			// Check context for uid (user_id) and roles
+			ctx := r.Context()
+			userID := ctx.Value(contextKeyUserID)
+			if userID == nil {
+				http.Error(w, "Missing claims", 401)
+				return
+			}
+			usrRoles := ctx.Value(contextKeyRoles)
+			if usrRoles == nil {
+				http.Error(w, "Missing claims", 401)
+				return
+			}
+
+			// If user is admin, just continue
+			// TODO: Check against DB because being admin is very big
+			if userAllowed(usrRoles.(string), userRoles.Admin) {
+				next(w, r, ps)
+			}
+
+			// Otherwise, we check the roles and user is forbidden
+			if !userAllowed(usrRoles.(string), roles...) {
+				http.Error(w, "Unauthorized", 403)
+				return
+			}
+
+			// Otherwise, user is permitted to continue
 			next(w, r, ps)
 		})
 	}
+}
+
+// userAllowed - Checks whether a given user's roles string passes the given requirements
+// TODO: Test this func
+func userAllowed(rolestring string, requirements ...string) bool {
+	roles := strings.Split(rolestring, " ")
+	reqs := make(map[string]string)
+
+	for _, req := range requirements {
+		reqs[req] = ""
+	}
+	for _, role := range roles {
+		if _, ok := reqs[role]; ok {
+			delete(reqs, role)
+		}
+	}
+
+	return len(reqs) == 0
 }

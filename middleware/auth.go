@@ -122,8 +122,31 @@ func userAllowed(rolestring string, requirements ...string) bool {
 }
 
 // ValidateRefreshToken - Middleware for checking if refresh token in cookie is valid
+// return if access token is still valid
 func ValidateRefreshToken(next httprouter.Handle) httprouter.Handle {
 	return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Make sure access token is invalid
+		mAT, err := r.Cookie("mAT")
+		if err == nil {
+			// Parse access token
+			parsedToken, err := jwt.Parse(mAT.Value, func(token *jwt.Token) (interface{}, error) {
+				// Check to make sure token was signed with right method
+				// TODO: Hide signing method
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, errors.New("Token signature invalid")
+				}
+				// TODO: put token secrets somewhere else so we can return it here non-hardcoded
+				return []byte("ayylmao"), nil
+			})
+			if err == nil {
+				// token is invalid
+				if parsedToken != nil || parsedToken.Valid {
+					http.Error(w, "Access token is still valid", 409)
+					return
+				}
+			}
+		}
+
 		// Attempt to get refresh token from cookies in request
 		mRT, err := r.Cookie("mRT")
 		if err != nil {

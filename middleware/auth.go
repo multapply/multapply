@@ -8,19 +8,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/julienschmidt/httprouter"
+	"github.com/multapply/multapply/util/constants"
 	"github.com/multapply/multapply/util/userRoles"
-)
-
-// Context keys
-type contextKey string
-
-func (c contextKey) String() string {
-	return "pkg/middleware context key " + string(c)
-}
-
-const (
-	contextKeyUserID = contextKey("uid")
-	contextKeyRoles  = contextKey("roles")
 )
 
 // Authenticate - Middleware for requiring jwt token auth for a route
@@ -73,8 +62,8 @@ func Authenticate(next httprouter.Handle) httprouter.Handle {
 		}
 
 		// otherwise, valid and we set the context
-		ctx := context.WithValue(r.Context(), contextKeyUserID, claims["uid"])
-		ctx = context.WithValue(ctx, contextKeyRoles, claims["roles"])
+		ctx := context.WithValue(r.Context(), constants.ContextKeyUserID, claims["uid"])
+		ctx = context.WithValue(ctx, constants.ContextKeyRoles, claims["roles"])
 		next(w, r.WithContext(ctx), ps)
 	})
 }
@@ -85,12 +74,12 @@ func Authorize(roles ...string) func(next httprouter.Handle) httprouter.Handle {
 		return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			// Check context for uid (user_id) and roles
 			ctx := r.Context()
-			userID := ctx.Value(contextKeyUserID)
+			userID := ctx.Value(constants.ContextKeyUserID)
 			if userID == nil {
 				http.Error(w, "Missing claims", 401)
 				return
 			}
-			usrRoles := ctx.Value(contextKeyRoles)
+			usrRoles := ctx.Value(constants.ContextKeyRoles)
 			if usrRoles == nil {
 				http.Error(w, "Missing claims", 401)
 				return
@@ -130,4 +119,50 @@ func userAllowed(rolestring string, requirements ...string) bool {
 	}
 
 	return len(reqs) == 0
+}
+
+// ValidateRefreshToken - Middleware for checking if refresh token in cookie is valid
+func ValidateRefreshToken(next httprouter.Handle) httprouter.Handle {
+	return httprouter.Handle(func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// Attempt to get refresh token from cookies in request
+		mRT, err := r.Cookie("mRT")
+		if err != nil {
+			http.Error(w, "Refresh token missing", 400)
+			return
+		}
+		refreshToken := mRT.Value
+
+		// Parse refresh token
+		parsedToken, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
+			// Check to make sure token was signed with right method
+			// TODO: Hide signing method
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("Token signature invalid")
+			}
+			// TODO: put token secrets somewhere else so we can return it here non-hardcoded
+			return []byte("lmaoayy"), nil
+		})
+		if err != nil {
+			http.Error(w, "Error parsing token", 401)
+			return
+		}
+
+		// token is invalid
+		if parsedToken == nil || !parsedToken.Valid {
+			http.Error(w, "Token is invalid", 401)
+			return
+		}
+
+		// Extract and verify claims
+		claims, ok := parsedToken.Claims.(jwt.MapClaims)
+		if !ok {
+			http.Error(w, "Token is invalid", 401)
+			return
+		}
+
+		// Otherwise, set the context and continue
+		ctx := context.WithValue(r.Context(), constants.ContextKeyTokenID, claims["tid"])
+
+		next(w, r.WithContext(ctx), ps)
+	})
 }

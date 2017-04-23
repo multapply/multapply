@@ -23,16 +23,22 @@ func main() {
 	if err != nil { // TODO: Use helper function for logging errors
 		log.Panic(err)
 	}
+	// TODO: Rename env to API or something, 'env' is weird
 	env := &handlers.Env{DB: db}
 
 	PORT := ":8080"
 	r := httprouter.New()
 
 	// Routes TODO: Logging middleware?
+	// TODO: Api prefix versioning, i.e. "api/v1/..."
 	r.GET("/", chain(env.GetUser,
 		mw.Authenticate,
 		mw.Authorize(userRoles.BasicUser)))
 	r.POST("/user/register", env.CreateUser)
+	r.POST("/user/login", env.LoginUser)
+
+	r.GET("/auth/token", chain(env.RequestNewToken,
+		mw.ValidateRefreshToken))
 
 	log.Print("Running server on " + PORT)
 	log.Fatal(http.ListenAndServe(PORT, r))

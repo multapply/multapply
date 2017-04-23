@@ -72,7 +72,7 @@ func RemoveNewUser(db *sqlx.DB, username string) error {
 	return err
 }
 
-//TEMP
+// TEMP
 func GetAllUsers(db *sqlx.DB) ([]User, error) {
 	// rows, err := db.Query("select * from users")
 	// if err != nil {
@@ -87,6 +87,13 @@ func GetAllUsers(db *sqlx.DB) ([]User, error) {
 	}
 
 	return users, nil
+}
+
+// GetUserByUsername - Get a *User with the given username
+func GetUserByUsername(db *sqlx.DB, username string) (*User, error) {
+	u := new(User)
+	err := db.Get(u, "SELECT * FROM users WHERE username=$1 LIMIT 1", username)
+	return u, err
 }
 
 // UsernameExists - returns whether an account with the given username
@@ -112,4 +119,11 @@ func EmailExists(db *sqlx.DB, email string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+// GetPasswordHash - Returns password_hash associated with given username
+func GetPasswordHash(db *sqlx.DB, username string) (string, error) {
+	var passwordHash string
+	err := db.Get(&passwordHash, "SELECT password_hash FROM users WHERE username=$1 LIMIT 1", username)
+	return passwordHash, err
 }

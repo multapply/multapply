@@ -1,0 +1,7 @@
+# Stores
+.DS_STORE
+
+# client stuff
+client/node_modules
+client/.gitignore
+client/.DS_STORE

@@ -11,6 +11,8 @@ import (
 
 // RequestNewToken - Handler for requesting a new access token
 func (env *Env) RequestNewToken(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	defer r.Body.Close()
+
 	// Check context for tid (token_id)
 	ctx := r.Context()
 	tid := ctx.Value(constants.ContextKeyTokenID)

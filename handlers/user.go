@@ -17,6 +17,8 @@ import (
 // GetUser - Returns user with given :id
 // TODO: Actually implement this - currently just a placeholder to test auth flow
 func (env *Env) GetUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	defer r.Body.Close()
+
 	log.Println("IP:", r.RemoteAddr)
 	w.Write([]byte("Auth successful!"))
 	r.Body.Close()
@@ -27,6 +29,8 @@ func (env *Env) GetUser(w http.ResponseWriter, r *http.Request, ps httprouter.Pa
 // TODO: Return actual JSON message after errors instead of just returning
 // TODO: Split a lot of functionality into helper functions
 func (env *Env) CreateUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	defer r.Body.Close()
+
 	// Decode request body into user struct
 	n := new(models.NewUser)
 	err := json.NewDecoder(r.Body).Decode(n)
@@ -34,7 +38,6 @@ func (env *Env) CreateUser(w http.ResponseWriter, r *http.Request, ps httprouter
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	defer r.Body.Close()
 
 	// Trim all fields of any leading/trailing whitespace
 	// and check for nonempty input
@@ -153,6 +156,8 @@ type loginRequest struct {
 // If successful, returns access/refresh tokens to user
 // TODO: Rate limit amount of login attempts to prevent attackers from brute forcing login
 func (env *Env) LoginUser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	defer r.Body.Close()
+
 	// Decode request body into user struct
 	l := new(loginRequest)
 	err := json.NewDecoder(r.Body).Decode(l)
@@ -160,7 +165,6 @@ func (env *Env) LoginUser(w http.ResponseWriter, r *http.Request, ps httprouter.
 		http.Error(w, "Error logging in", 500)
 		return
 	}
-	defer r.Body.Close()
 
 	// Trim all fields of any leading/trailing whitespace
 	// and check for nonempty input

@@ -6,4 +6,6 @@ const (
 	FirstNameLength = 35
 	LastNameLength  = 35
 	EmailLength     = 255
+
+	JobTitleLength = 100
 )

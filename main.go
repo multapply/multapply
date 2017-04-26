@@ -31,15 +31,22 @@ func main() {
 
 	// Routes TODO: Logging middleware?
 	// TODO: Api prefix versioning, i.e. "api/v1/..."
+	// TODO: Seriously considering making services so it doesn't get confusing for models.blah...
 	r.GET("/", chain(env.GetUser,
 		mw.Authenticate,
 		mw.Authorize(userRoles.BasicUser)))
-	r.POST("/user/register", env.CreateUser)
-	r.POST("/user/login", env.LoginUser)
+	r.POST("/users/register", env.CreateUser)
+	r.POST("/users/login", env.LoginUser)
 
 	r.GET("/auth/token", chain(env.RequestNewToken,
 		mw.ValidateRefreshToken))
 
+	// Job Routes
+	r.POST("/jobs", chain(env.CreateJob,
+		mw.Authenticate,
+		mw.Authorize(userRoles.Admin)))
+
+	// Logging TODO: Proper logging
 	log.Print("Running server on " + PORT)
 	log.Fatal(http.ListenAndServe(PORT, r))
 }

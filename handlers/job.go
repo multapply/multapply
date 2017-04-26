@@ -32,3 +32,7 @@ func (env *Env) CreateJob(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 	// TODO: Proper success response
 }
+
+func (env *Env) GetAllJobs(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
+}

@@ -29,6 +29,7 @@ func InitDB(dsn string) (*sqlx.DB, error) {
 	tx := db.MustBegin()
 	tx.MustExec(createUsersTable)
 	tx.MustExec(createRefreshTokensTable)
+	tx.MustExec(createJobsTable)
 	err = tx.Commit()
 	if err != nil {
 		return nil, err
@@ -60,7 +61,7 @@ var createJobsTable = `CREATE TABLE IF NOT EXISTS jobs (
 	job_id SERIAL PRIMARY KEY NOT NULL UNIQUE,
 	author_id INTEGER NOT NULL REFERENCES users(user_id),
 	company_id INTEGER NOT NULL,
-	title VARCHAR(` + strconv.Itoa(constants.JobTitleLength) + `NOT NULL,
+	title VARCHAR(` + strconv.Itoa(constants.JobTitleLength) + `) NOT NULL,
 	description TEXT NOT NULL,
 	views INTEGER DEFAULT 0,
 	icon_url VARCHAR(150) NOT NULL,

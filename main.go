@@ -44,7 +44,7 @@ func main() {
 	// Job Routes
 	r.POST("/jobs", chain(env.CreateJob,
 		mw.Authenticate,
-		mw.Authorize(userRoles.Admin)))
+		mw.Authorize(userRoles.BasicUser))) // TODO: Set this to Admins-only in prod
 
 	// Logging TODO: Proper logging
 	log.Print("Running server on " + PORT)
